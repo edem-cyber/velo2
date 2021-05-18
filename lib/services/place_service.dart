@@ -1,41 +1,72 @@
-import 'dart:convert';
-import 'package:velo2/models/place_model.dart';
-import 'package:http/http.dart' as http;
+// String searchURL =
+//     'https://maps.googleapis.com/maps/api/place/nearbysearch/json?location=${PlacesService().getLatLong()}&rankby=distance&type=pharmacy&key=' +
+//         PlacesService().apiKey;
 import 'package:geolocator/geolocator.dart';
+import 'package:http/http.dart' as http;
+import 'dart:async';
+import 'dart:convert';
+import 'package:velo2/services/api_key.dart';
+import 'package:velo2/models/place_model.dart';
 
-class PlacesService {
-  static final _sevice = new PlacesService();
-  static PlacesService get() {
-    return _sevice;
+String lat;
+String long;
+String locationData;
+
+Future<String> getLatLong() async {
+  var geoposition = await Geolocator.getLastKnownPosition();
+  lat = '${geoposition.latitude}';
+  long = '${geoposition.longitude}';
+  locationData = lat + ',' + long;
+  print(locationData);
+  print('cool');
+  return locationData;
+}
+
+var realLocation;
+getLocationData() {
+  var realLocation = getLatLong().then((value) => value);
+  return realLocation;
+}
+
+Future<List<PlaceDetail>> getNearbyPlaces(String where) async {
+  try {
+    final String url =
+        "https://maps.googleapis.com/maps/api/place/nearbysearch/json?location=$lat,$long&rankby=distance&type=$where&key=$apiKey";
+    var reponse =
+        await http.get(Uri.parse(url), headers: {"Accept": "application/json"});
+
+    List data = json.decode(reponse.body)["results"];
+    var places = <PlaceDetail>[];
+    data.forEach((f) => places.add(new PlaceDetail(f["place_id"], f["name"],
+        f["icon"], f["rating"].toString(), f["vicinity"])));
+
+    return places;
+  } catch (e) {
+    return e;
   }
+}
 
-  String latitudeData;
-  String longitudeData;
-  String locationData;
+Future getPlace(String place_id) async {
+  try {
+    final String detailUrl =
+        "https://maps.googleapis.com/maps/api/place/details/json?key=$apiKey&placeid=";
+    var response = await http.get(Uri.parse(detailUrl + place_id),
+        headers: {"Accept": "application/json"});
+    var result = json.decode(response.body)["result"];
 
-  getLatLong() async {
-    var geoposition = await Geolocator.getCurrentPosition(
-        desiredAccuracy: LocationAccuracy.high);
-    latitudeData = '${geoposition.latitude}';
-    longitudeData = '${geoposition.longitude}';
-    String locationData = latitudeData + ',' + longitudeData;
-    return locationData;
+    List<String> weekdays = [];
+    if (result["opening_hours"] != null)
+      weekdays = result["opening_hours"]["weekday_text"]?.cast<String>();
+    return new PlaceDetail(
+        result["place_id"],
+        result["name"],
+        result["icon"],
+        result["rating"].toString(),
+        result["vicinity"],
+        result["formatted_address"],
+        result["international_phone_number"],
+        weekdays);
+  } catch (e) {
+    print(e);
   }
-
-  String apiKey = 'AIzaSyCejtyjpP1L2Y4L6ojcrI_zkTz8Q8XVN98';
-
-  String searchURL =
-      'https://maps.googleapis.com/maps/api/place/nearbysearch/json?location=${PlacesService().getLatLong()}&rankby=distance&type=pharmacy&key=' +
-          PlacesService().apiKey;
-
-  var places;
-  // Future<List<Place>> getNearbyPlaces() async {
-  //   var response =
-  //       await http.get(searchURL, headers: {"Accept": "application/json"});
-  //   var places = <Place>[];
-  //   List data = json.decode(response.body)["results"];
-  //   data.forEach((f) => places.add(new Place(
-  //       f["icon"], f["name"], f["rating"], f["vicinity"], f["place_id"])));
-  //   return places;
-  // }
 }

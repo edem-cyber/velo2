@@ -1,36 +1,19 @@
+import 'package:geolocator/geolocator.dart';
+import 'package:velo2/services/api_key.dart';
 
+Future<String> getLatLong() async {
+  var geoposition = await Geolocator.getLastKnownPosition();
+  String latitudeData = '${geoposition.latitude}';
+  String longitudeData = '${geoposition.longitude}';
+  String locationData = latitudeData + ',' + longitudeData;
+  return locationData;
+}
 
+realUrl() async {
+  var testurl = await getLatLong();
 
-// findLocation() async {
-//   Position position = await Geolocator.getLastKnownPosition();
-//   print(position);
-//   return position;
-// }
-
-// Future<Position> _determinePosition() async {
-//   bool serviceEnabled;
-//   LocationPermission permission;
-
-//   serviceEnabled = await Geolocator.isLocationServiceEnabled();
-//   if (!serviceEnabled) {
-//     return Future.error('Location services are disabled., Open Settings and enable');
-//   }
-
-//   permission = await Geolocator.checkPermission();
-//   if (permission == LocationPermission.deniedForever) {
-//     return Future.error(
-//         'Location permissions are permantly denied, cannot request permissions.');
-//   }
-
-//   if (permission == LocationPermission.denied) {
-//     permission = await Geolocator.requestPermission();
-//     if (permission != LocationPermission.whileInUse &&
-//         permission != LocationPermission.always) {
-//       return Future.error(
-//           'Location permissions are denied (actual value: $permission).');
-//     }
-//   }
-
-//   print(Geolocator.getLastKnownPosition);
-//   return await Geolocator.getCurrentPosition();
-// }
+  Uri url = Uri.parse(
+    "https://maps.googleapis.com/maps/api/place/nearbysearch/json?location=$testurl&rankby=distance&type=pharmacy&key=$apiKey");
+  print(url);
+  return url;
+}

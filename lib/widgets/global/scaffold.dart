@@ -1,11 +1,14 @@
 import 'package:flutter/material.dart';
+import 'package:auto_size_text/auto_size_text.dart';
 
 Widget myScaffold({BuildContext context, Widget child, String title}) {
   return Scaffold(
     backgroundColor: Colors.grey[300],
     appBar: AppBar(
-      title: Text(
+      iconTheme: IconThemeData(color: Colors.blue[800]),
+      title: AutoSizeText(
         title,
+        maxFontSize: 20,
         style: TextStyle(color: Colors.blue[800], fontSize: 25),
       ),
       elevation: 1,
